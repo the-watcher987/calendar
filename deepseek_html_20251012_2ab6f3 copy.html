@@ -1,0 +1,2200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOCUS - Academic Planner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --text-color: #333;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --font-size: 16px;
+        }
+
+        .dark-mode {
+            --primary-color: #34495e;
+            --secondary-color: #2980b9;
+            --accent-color: #c0392b;
+            --light-color: #2c3e50;
+            --dark-color: #ecf0f1;
+            --text-color: #ecf0f1;
+            --bg-color: #1a2530;
+            --card-bg: #2c3e50;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-family);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            font-size: var(--font-size);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        nav {
+            transition: all 0.3s ease;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin-left: 1.5rem;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+        }
+
+        nav ul li a:hover, nav ul li a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-controls button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            margin-left: 1rem;
+            cursor: pointer;
+        }
+
+        main {
+            padding: 2rem 0;
+            min-height: calc(100vh - 140px);
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--light-color);
+        }
+
+        .welcome-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .date-display {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            margin-right: 2rem;
+            min-width: 150px;
+        }
+
+        .date-display .day {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .date-display .month-year {
+            font-size: 1.2rem;
+        }
+
+        .welcome-text h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .events-list {
+            list-style: none;
+        }
+
+        .events-list li {
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--light-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .events-list li:last-child {
+            border-bottom: none;
+        }
+
+        .event-time {
+            font-weight: bold;
+            color: var(--secondary-color);
+            min-width: 80px;
+        }
+
+        .event-details {
+            flex: 1;
+        }
+
+        .event-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .event-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--secondary-color);
+            font-size: 1rem;
+        }
+
+        .scroll-more {
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--secondary-color);
+            font-style: italic;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        table th, table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid var(--light-color);
+        }
+
+        table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        table tr:nth-child(even) {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .semester-plan {
+            margin-bottom: 2rem;
+        }
+
+        .semester-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .semester-courses {
+            padding: 1rem;
+            border: 1px solid var(--light-color);
+            border-top: none;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+        }
+
+        .course-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--light-color);
+        }
+
+        .course-item:last-child {
+            border-bottom: none;
+        }
+
+        .course-credits {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .age-calculator {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button.secondary {
+            background-color: var(--light-color);
+            color: var(--text-color);
+        }
+
+        button.danger {
+            background-color: var(--accent-color);
+        }
+
+        .result {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 1rem;
+        }
+
+        .calendar-header {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .calendar-day {
+            background-color: var(--card-bg);
+            border: 1px solid #ddd;
+            padding: 10px;
+            min-height: 80px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .calendar-day.empty {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .calendar-day.today {
+            background-color: rgba(52, 152, 219, 0.2);
+            border-color: var(--secondary-color);
+        }
+
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .calendar-event {
+            font-size: 0.8rem;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-top: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .calendar-birthday {
+            font-size: 0.8rem;
+            background-color: var(--success-color);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-top: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .setting-option {
+            padding: 1rem;
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .setting-option:hover {
+            transform: translateY(-5px);
+        }
+
+        .setting-option.active {
+            border: 2px solid var(--secondary-color);
+        }
+
+        .bg-option {
+            height: 100px;
+            background-size: cover;
+            background-position: center;
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+        }
+
+        footer {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+            margin-top: 2rem;
+        }
+
+        .edit-btn {
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            cursor: pointer;
+            font-size: 1rem;
+            margin-left: 10px;
+        }
+
+        .editable {
+            border: 1px dashed transparent;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .editable:hover {
+            border-color: var(--secondary-color);
+        }
+
+        .timer-clock {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .clock, .timer {
+            background-color: var(--card-bg);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            flex: 1;
+            margin: 0 0.5rem;
+        }
+
+        .clock-time, .timer-display {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .timer-controls button {
+            padding: 0.5rem 1rem;
+        }
+
+        .reminder-section {
+            margin-top: 1.5rem;
+        }
+
+        .reminder-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem;
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+        }
+
+        .hidden-content {
+            display: none;
+        }
+
+        .hidden-content.show {
+            display: block;
+        }
+
+        .grad-school-list {
+            list-style: none;
+        }
+
+        .grad-school-list li {
+            padding: 1rem;
+            border-bottom: 1px solid var(--light-color);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .grad-school-list li:hover {
+            background-color: var(--light-color);
+        }
+
+        .school-details {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+        }
+
+        .profile-section {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        .profile-picture {
+            text-align: center;
+        }
+
+        .profile-picture img {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        .profile-info .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .resume-preview {
+            margin-top: 2rem;
+            padding: 2rem;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-family: 'Georgia', serif;
+            color: #333;
+        }
+
+        .resume-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 1rem;
+        }
+
+        .resume-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .resume-header p {
+            margin-bottom: 0.25rem;
+        }
+
+        .resume-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .resume-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--light-color);
+            padding-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .resume-section p {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .notes-section {
+            margin-top: 2rem;
+        }
+
+        .notes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .note-card {
+            background-color: var(--light-color);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .note-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .note-content {
+            margin-bottom: 1rem;
+        }
+
+        .note-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .syllabus-section {
+            margin-top: 2rem;
+        }
+
+        .syllabus-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .syllabus-item {
+            background-color: var(--light-color);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .syllabus-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .nav-toggle {
+                display: block;
+                position: absolute;
+                right: 20px;
+                top: 15px;
+            }
+
+            nav {
+                width: 100%;
+                max-height: 0;
+                overflow: hidden;
+            }
+
+            nav.show {
+                max-height: 300px;
+                margin-top: 1rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+            }
+
+            nav ul li {
+                margin: 0.5rem 0;
+            }
+
+            .welcome-section {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .date-display {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+
+            .user-controls {
+                margin-top: 1rem;
+            }
+
+            .timer-clock {
+                flex-direction: column;
+            }
+
+            .clock, .timer {
+                margin: 0.5rem 0;
+            }
+
+            .profile-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">FOCUS</div>
+            <button class="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav>
+                <ul>
+                    <li><a href="#" class="nav-link active" data-page="home">Home</a></li>
+                    <li><a href="#" class="nav-link" data-page="academic-plan">Academic Plan</a></li>
+                    <li><a href="#" class="nav-link" data-page="calendar">Calendar</a></li>
+                    <li><a href="#" class="nav-link" data-page="grad-school">Grad School</a></li>
+                    <li><a href="#" class="nav-link" data-page="profile">Profile/Resume</a></li>
+                    <li><a href="#" class="nav-link" data-page="settings">Settings</a></li>
+                </ul>
+            </nav>
+            <div class="user-controls">
+                <span id="userWelcome">Welcome, User</span>
+                <button id="themeToggle" title="Toggle Dark Mode"><i class="fas fa-moon"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Home Page -->
+        <div id="home" class="page active">
+            <div class="welcome-section">
+                <div class="date-display">
+                    <div class="day" id="current-day">16</div>
+                    <div class="month-year" id="current-month-year">Monday 2025</div>
+                </div>
+                <div class="welcome-text">
+                    <h1>Hi! <span class="editable" id="userDisplayName">Allan</span> <button class="edit-btn" data-edit="userDisplayName"><i class="fas fa-edit"></i></button></h1>
+                    <p>Welcome to your Focus academic planner</p>
+                </div>
+            </div>
+
+            <div class="timer-clock">
+                <div class="clock">
+                    <h3>Current Time</h3>
+                    <div class="clock-time" id="currentTime">12:00:00 PM</div>
+                </div>
+                <div class="timer">
+                    <h3>Timer</h3>
+                    <div class="timer-display" id="timerDisplay">25:00</div>
+                    <div class="timer-controls">
+                        <button id="startTimer">Start</button>
+                        <button id="pauseTimer">Pause</button>
+                        <button id="resetTimer">Reset</button>
+                    </div>
+                    <div class="form-group">
+                        <input type="number" id="timerMinutes" placeholder="Minutes" value="25" min="1">
+                        <button id="setTimer">Set Timer</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Today's Events</h2>
+                    <button id="addEventBtn"><i class="fas fa-plus"></i> Add Event</button>
+                </div>
+                <ul class="events-list" id="todayEvents">
+                    <!-- Events will be populated by JavaScript -->
+                </ul>
+                <div class="scroll-more" id="scrollToday">scroll down for more</div>
+                <div class="hidden-content" id="moreTodayEvents">
+                    <!-- Additional events will be shown here -->
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Upcoming Deadlines</h2>
+                <ul class="events-list" id="upcomingEvents">
+                    <!-- Upcoming events will be populated by JavaScript -->
+                </ul>
+                <div class="scroll-more" id="scrollUpcoming">scroll down for more</div>
+                <div class="hidden-content" id="moreUpcomingEvents">
+                    <!-- Additional upcoming events will be shown here -->
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Age Calculator</h2>
+                <div class="form-group">
+                    <label for="firstName">First Name:</label>
+                    <input type="text" id="firstName" placeholder="Enter your first name">
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name:</label>
+                    <input type="text" id="lastName" placeholder="Enter your last name">
+                </div>
+                <div class="form-group">
+                    <label for="birthYear">Birth Year:</label>
+                    <input type="number" id="birthYear" placeholder="Enter your birth year">
+                </div>
+                <button id="calculateAge">Calculate Age</button>
+                <div id="ageResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Academic Plan Page -->
+        <div id="academic-plan" class="page">
+            <div class="card">
+                <h2>Academic Plan <button class="edit-btn" id="addSemesterBtn"><i class="fas fa-plus"></i> Add Semester</button></h2>
+                <div id="semestersContainer">
+                    <!-- Semesters will be populated by JavaScript -->
+                </div>
+                <div class="card">
+                    <h3>Credit Summary</h3>
+                    <p>Total Credits: <span id="totalCredits">0</span></p>
+                </div>
+            </div>
+
+            <div class="card notes-section">
+                <h2>Academic Notes</h2>
+                <div class="form-group">
+                    <input type="text" id="noteTitle" placeholder="Note Title">
+                    <textarea id="noteContent" rows="4" placeholder="Write your note here..."></textarea>
+                    <button id="addNote">Add Note</button>
+                </div>
+                <div class="notes-container" id="notesContainer">
+                    <!-- Notes will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="card syllabus-section">
+                <h2>Course Syllabi</h2>
+                <div class="form-group">
+                    <input type="text" id="syllabusCourse" placeholder="Course Name">
+                    <input type="file" id="syllabusFile" accept=".pdf,.doc,.docx,.txt">
+                    <button id="uploadSyllabus">Upload Syllabus</button>
+                </div>
+                <div class="syllabus-list" id="syllabusList">
+                    <!-- Syllabi will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Page -->
+        <div id="calendar" class="page">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 id="calendarMonthYear">October 2024</h2>
+                    <div>
+                        <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                        <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="calendar">
+                    <div class="calendar-header">
+                        <div>Sun</div>
+                        <div>Mon</div>
+                        <div>Tue</div>
+                        <div>Wed</div>
+                        <div>Thu</div>
+                        <div>Fri</div>
+                        <div>Sat</div>
+                    </div>
+                    <!-- Calendar days will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Import Google Calendar</h2>
+                <div class="form-group">
+                    <p>To import your Google Calendar, paste your calendar URL or export file:</p>
+                    <input type="text" id="calendarUrl" placeholder="Calendar URL or file">
+                    <button id="importCalendar">Import Calendar</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Upcoming Events</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Event</th>
+                            <th>Category</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendarEvents">
+                        <!-- Calendar events will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Grad School Page -->
+        <div id="grad-school" class="page">
+            <div class="card">
+                <h2>Graduate School Targets</h2>
+                
+                <div class="form-group">
+                    <input type="text" id="schoolName" placeholder="School Name">
+                    <input type="text" id="schoolLocation" placeholder="Location">
+                    <textarea id="schoolInfo" rows="4" placeholder="School Information"></textarea>
+                    <textarea id="schoolRequirements" rows="3" placeholder="Admission Requirements"></textarea>
+                    <button id="addSchool">Add School</button>
+                </div>
+                
+                <div id="gradSchoolsContainer">
+                    <!-- Grad schools will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile/Resume Page -->
+        <div id="profile" class="page">
+            <div class="card">
+                <h2>Profile & Resume Builder</h2>
+                
+                <div class="profile-section">
+                    <div class="profile-picture">
+                        <img id="profileImage" src="https://via.placeholder.com/200" alt="Profile Picture">
+                        <input type="file" id="uploadImage" accept="image/*">
+                        <button id="uploadBtn">Upload Photo</button>
+                    </div>
+                    
+                    <div class="profile-info">
+                        <div class="form-group">
+                            <label for="resumeName">Full Name:</label>
+                            <input type="text" id="resumeName" placeholder="Your Full Name">
+                        </div>
+                        <div class="form-group">
+                            <label for="resumeTitle">Professional Title:</label>
+                            <input type="text" id="resumeTitle" placeholder="e.g., Computer Engineering Student">
+                        </div>
+                        <div class="form-group">
+                            <label for="resumeEmail">Email:</label>
+                            <input type="email" id="resumeEmail" placeholder="your.email@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="resumePhone">Phone:</label>
+                            <input type="tel" id="resumePhone" placeholder="(123) 456-7890">
+                        </div>
+                        <div class="form-group">
+                            <label for="resumeLocation">Location:</label>
+                            <input type="text" id="resumeLocation" placeholder="City, State">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resumeSummary">Professional Summary:</label>
+                    <textarea id="resumeSummary" rows="4" placeholder="Brief summary of your skills and experience"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resumeEducation">Education:</label>
+                    <textarea id="resumeEducation" rows="4" placeholder="Your educational background"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resumeExperience">Experience:</label>
+                    <textarea id="resumeExperience" rows="4" placeholder="Your work experience"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resumeSkills">Skills:</label>
+                    <textarea id="resumeSkills" rows="4" placeholder="Your technical and soft skills"></textarea>
+                </div>
+                
+                <button id="updateResume">Update Resume</button>
+                <button id="downloadResume">Download as PDF</button>
+            </div>
+            
+            <div class="card">
+                <h2>Resume Preview</h2>
+                <div id="resumePreview" class="resume-preview">
+                    <div class="resume-header">
+                        <h1 id="previewName">Your Name</h1>
+                        <p id="previewTitle">Professional Title</p>
+                        <p id="previewContact">Email | Phone | Location</p>
+                    </div>
+                    
+                    <div class="resume-section">
+                        <h3>Professional Summary</h3>
+                        <p id="previewSummary">Your professional summary will appear here.</p>
+                    </div>
+                    
+                    <div class="resume-section">
+                        <h3>Education</h3>
+                        <p id="previewEducation">Your education details will appear here.</p>
+                    </div>
+                    
+                    <div class="resume-section">
+                        <h3>Experience</h3>
+                        <p id="previewExperience">Your work experience will appear here.</p>
+                    </div>
+                    
+                    <div class="resume-section">
+                        <h3>Skills</h3>
+                        <p id="previewSkills">Your skills will appear here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settings" class="page">
+            <div class="card">
+                <h2>User Settings</h2>
+                
+                <div class="form-group">
+                    <label for="displayName">Display Name:</label>
+                    <input type="text" id="displayName" placeholder="Change display name">
+                </div>
+                
+                <button id="saveSettings">Save Settings</button>
+            </div>
+            
+            <div class="card">
+                <h2>Appearance</h2>
+                
+                <div class="form-group">
+                    <label for="fontFamily">Font Family:</label>
+                    <select id="fontFamily">
+                        <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI (Default)</option>
+                        <option value="Arial, Helvetica, sans-serif">Arial</option>
+                        <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                        <option value="'Courier New', Courier, monospace">Courier New</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fontSize">Font Size:</label>
+                    <select id="fontSize">
+                        <option value="14px">Small</option>
+                        <option value="16px" selected>Medium</option>
+                        <option value="18px">Large</option>
+                        <option value="20px">Extra Large</option>
+                    </select>
+                </div>
+                
+                <h3>Custom Background</h3>
+                <div class="form-group">
+                    <input type="file" id="customBackground" accept="image/*">
+                    <button id="setBackground">Set as Background</button>
+                    <button id="removeBackground">Remove Background</button>
+                </div>
+                
+                <button id="applyAppearance">Apply Appearance Settings</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Event Modal -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="eventModalTitle">Add New Event</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="eventTitle">Event Title:</label>
+                <input type="text" id="eventTitle" placeholder="Enter event title">
+            </div>
+            <div class="form-group">
+                <label for="eventDate">Date:</label>
+                <input type="date" id="eventDate">
+            </div>
+            <div class="form-group">
+                <label for="eventTime">Time:</label>
+                <input type="time" id="eventTime">
+            </div>
+            <div class="form-group">
+                <label for="eventDescription">Description:</label>
+                <textarea id="eventDescription" placeholder="Enter event description"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="eventCategory">Category:</label>
+                <select id="eventCategory">
+                    <option value="academic">Academic</option>
+                    <option value="personal">Personal</option>
+                    <option value="work">Work</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <button id="saveEvent">Save Event</button>
+            <button id="deleteEvent" class="danger" style="display: none;">Delete Event</button>
+        </div>
+    </div>
+
+    <!-- Add Semester Modal -->
+    <div id="semesterModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="semesterModalTitle">Add New Semester</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="semesterName">Semester Name:</label>
+                <input type="text" id="semesterName" placeholder="e.g., Fall 2025">
+            </div>
+            <div class="form-group">
+                <label for="semesterCredits">Total Credits:</label>
+                <input type="number" id="semesterCredits" placeholder="e.g., 18">
+            </div>
+            <div id="coursesContainer">
+                <h3>Courses</h3>
+                <div class="course-input">
+                    <input type="text" class="course-name" placeholder="Course Name">
+                    <input type="number" class="course-credits" placeholder="Credits">
+                    <button class="remove-course"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+            <button id="addCourseBtn">Add Course</button>
+            <button id="saveSemester">Save Semester</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>Focus Academic Planner &copy; 2024</p>
+        </div>
+    </footer>
+
+    <script>
+        // Data Management
+        let userData = JSON.parse(localStorage.getItem('focusUserData')) || {};
+        
+        // Event Management
+        let events = userData.events || [];
+        let academicPlan = userData.academicPlan || {};
+        let notes = userData.notes || [];
+        let syllabi = userData.syllabi || [];
+        let gradSchools = userData.gradSchools || {};
+        
+        // Timer variables
+        let timerInterval;
+        let timerTime = 25 * 60; // 25 minutes in seconds
+        let timerRunning = false;
+
+        // Hardcoded birthdays (month is 0-indexed, so 0=January, 1=February, etc.)
+        const birthdays = [
+            { name: "DAN", month: 0, day: 17, year: 2002 },
+            { name: "ALLAN", month: 6, day: 16, year: 2007 },
+            { name: "HORTENSE", month: 7, day: 3, year: 2000 },
+            { name: "NANCY", month: 2, day: 6, year: 2004 },
+            { name: "PAUL", month: 1, day: 19, year: 2016 },
+            { name: "MIKE", month: 9, day: 6, year: 2013 },
+            { name: "JEMMA", month: 0, day: 17, year: 2002 },
+            { name: "NATALIE", month: 9, day: 7, year: 1981 },
+            { name: "CHRISPIN", month: 4, day: 30, year: 1973 }
+        ];
+
+        // Initialize user
+        document.getElementById('userWelcome').textContent = `Welcome, ${userData.displayName || 'User'}`;
+        document.getElementById('userDisplayName').textContent = userData.displayName || 'User';
+        document.getElementById('displayName').value = userData.displayName || 'User';
+
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetPage = this.getAttribute('data-page');
+                
+                // Update active nav link
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show target page
+                document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+                document.getElementById(targetPage).classList.add('active');
+                
+                // Close mobile nav if open
+                document.querySelector('nav').classList.remove('show');
+            });
+        });
+
+        // Mobile nav toggle
+        document.querySelector('.nav-toggle').addEventListener('click', function() {
+            document.querySelector('nav').classList.toggle('show');
+        });
+
+        // Update current date and time
+        function updateCurrentDateTime() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long' };
+            const day = now.getDate();
+            const monthYear = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long' });
+            
+            document.getElementById('current-day').textContent = day;
+            document.getElementById('current-month-year').textContent = monthYear;
+            
+            // Update clock
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        // Timer functionality
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timerTime / 60);
+            const seconds = timerTime % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        document.getElementById('startTimer').addEventListener('click', function() {
+            if (!timerRunning) {
+                timerRunning = true;
+                timerInterval = setInterval(function() {
+                    if (timerTime > 0) {
+                        timerTime--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        timerRunning = false;
+                        alert('Timer finished!');
+                    }
+                }, 1000);
+            }
+        });
+
+        document.getElementById('pauseTimer').addEventListener('click', function() {
+            if (timerRunning) {
+                clearInterval(timerInterval);
+                timerRunning = false;
+            }
+        });
+
+        document.getElementById('resetTimer').addEventListener('click', function() {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            timerTime = 25 * 60;
+            updateTimerDisplay();
+        });
+
+        document.getElementById('setTimer').addEventListener('click', function() {
+            const minutes = parseInt(document.getElementById('timerMinutes').value);
+            if (minutes && minutes > 0) {
+                clearInterval(timerInterval);
+                timerRunning = false;
+                timerTime = minutes * 60;
+                updateTimerDisplay();
+            }
+        });
+
+        // Event Management
+        function loadEvents() {
+            const today = new Date();
+            const todayString = today.toISOString().split('T')[0];
+            
+            // Filter today's events
+            const todayEvents = events.filter(event => event.date === todayString);
+            const upcomingEvents = events.filter(event => event.date > todayString)
+                                        .sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // Display today's events
+            const todayEventsList = document.getElementById('todayEvents');
+            todayEventsList.innerHTML = '';
+            
+            todayEvents.forEach((event, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span class="event-time">${event.time || 'All day'}</span>
+                    <span class="event-details">${event.title}</span>
+                    <div class="event-actions">
+                        <button class="edit-event" data-id="${event.id}"><i class="fas fa-edit"></i></button>
+                        <button class="delete-event" data-id="${event.id}"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                
+                if (index >= 3) {
+                    li.style.display = 'none';
+                    document.getElementById('moreTodayEvents').appendChild(li);
+                } else {
+                    todayEventsList.appendChild(li);
+                }
+            });
+            
+            // Display upcoming events
+            const upcomingEventsList = document.getElementById('upcomingEvents');
+            upcomingEventsList.innerHTML = '';
+            
+            upcomingEvents.forEach((event, index) => {
+                const li = document.createElement('li');
+                const eventDate = new Date(event.date);
+                const dateString = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                
+                li.innerHTML = `
+                    <span class="event-time">${dateString}</span>
+                    <span class="event-details">${event.title}</span>
+                    <div class="event-actions">
+                        <button class="edit-event" data-id="${event.id}"><i class="fas fa-edit"></i></button>
+                        <button class="delete-event" data-id="${event.id}"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                
+                if (index >= 3) {
+                    li.style.display = 'none';
+                    document.getElementById('moreUpcomingEvents').appendChild(li);
+                } else {
+                    upcomingEventsList.appendChild(li);
+                }
+            });
+            
+            // Update calendar events table
+            updateCalendarEventsTable();
+            
+            // Update calendar display
+            updateCalendar();
+        }
+
+        function saveEvents() {
+            userData.events = events;
+            saveUserData();
+        }
+
+        document.getElementById('addEventBtn').addEventListener('click', function() {
+            document.getElementById('eventModalTitle').textContent = 'Add New Event';
+            document.getElementById('eventDate').value = '';
+            document.getElementById('eventTime').value = '';
+            document.getElementById('eventTitle').value = '';
+            document.getElementById('eventDescription').value = '';
+            document.getElementById('eventCategory').value = 'academic';
+            document.getElementById('deleteEvent').style.display = 'none';
+            document.getElementById('eventModal').classList.add('active');
+        });
+
+        document.getElementById('saveEvent').addEventListener('click', function() {
+            const title = document.getElementById('eventTitle').value;
+            const date = document.getElementById('eventDate').value;
+            const time = document.getElementById('eventTime').value;
+            const description = document.getElementById('eventDescription').value;
+            const category = document.getElementById('eventCategory').value;
+            
+            if (!title || !date) {
+                alert('Please fill in at least the event title and date.');
+                return;
+            }
+            
+            const event = {
+                id: Date.now().toString(),
+                title,
+                date,
+                time,
+                description,
+                category
+            };
+            
+            events.push(event);
+            saveEvents();
+            loadEvents();
+            
+            document.getElementById('eventModal').classList.remove('active');
+        });
+
+        // Scroll more functionality
+        document.getElementById('scrollToday').addEventListener('click', function() {
+            document.getElementById('moreTodayEvents').classList.toggle('show');
+            this.textContent = document.getElementById('moreTodayEvents').classList.contains('show') ? 
+                'scroll up for less' : 'scroll down for more';
+        });
+
+        document.getElementById('scrollUpcoming').addEventListener('click', function() {
+            document.getElementById('moreUpcomingEvents').classList.toggle('show');
+            this.textContent = document.getElementById('moreUpcomingEvents').classList.contains('show') ? 
+                'scroll up for less' : 'scroll down for more';
+        });
+
+        // Academic Plan functionality
+        function loadAcademicPlan() {
+            const semestersContainer = document.getElementById('semestersContainer');
+            semestersContainer.innerHTML = '';
+            
+            let totalCredits = 0;
+            
+            for (const semesterName in academicPlan) {
+                const semester = academicPlan[semesterName];
+                totalCredits += semester.credits;
+                
+                const semesterElement = document.createElement('div');
+                semesterElement.className = 'semester-plan';
+                semesterElement.innerHTML = `
+                    <div class="semester-header">
+                        ${semesterName} (${semester.credits} credits)
+                        <div>
+                            <button class="edit-semester" data-name="${semesterName}"><i class="fas fa-edit"></i></button>
+                            <button class="delete-semester" data-name="${semesterName}"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="semester-courses">
+                        ${semester.courses.map(course => `
+                            <div class="course-item">
+                                <span>${course.name}</span>
+                                <span class="course-credits">${course.credits}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                semestersContainer.appendChild(semesterElement);
+            }
+            
+            document.getElementById('totalCredits').textContent = totalCredits;
+            
+            // Add event listeners to edit and delete buttons
+            document.querySelectorAll('.edit-semester').forEach(button => {
+                button.addEventListener('click', function() {
+                    const semesterName = this.getAttribute('data-name');
+                    editSemester(semesterName);
+                });
+            });
+            
+            document.querySelectorAll('.delete-semester').forEach(button => {
+                button.addEventListener('click', function() {
+                    const semesterName = this.getAttribute('data-name');
+                    deleteSemester(semesterName);
+                });
+            });
+        }
+
+        document.getElementById('addSemesterBtn').addEventListener('click', function() {
+            document.getElementById('semesterModalTitle').textContent = 'Add New Semester';
+            document.getElementById('semesterName').value = '';
+            document.getElementById('semesterCredits').value = '';
+            document.getElementById('coursesContainer').innerHTML = `
+                <h3>Courses</h3>
+                <div class="course-input">
+                    <input type="text" class="course-name" placeholder="Course Name">
+                    <input type="number" class="course-credits" placeholder="Credits">
+                    <button class="remove-course"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            document.getElementById('semesterModal').classList.add('active');
+        });
+
+        document.getElementById('addCourseBtn').addEventListener('click', function() {
+            const coursesContainer = document.getElementById('coursesContainer');
+            const courseInput = document.createElement('div');
+            courseInput.className = 'course-input';
+            courseInput.innerHTML = `
+                <input type="text" class="course-name" placeholder="Course Name">
+                <input type="number" class="course-credits" placeholder="Credits">
+                <button class="remove-course"><i class="fas fa-trash"></i></button>
+            `;
+            coursesContainer.appendChild(courseInput);
+            
+            // Add event listener to remove button
+            courseInput.querySelector('.remove-course').addEventListener('click', function() {
+                courseInput.remove();
+            });
+        });
+
+        document.getElementById('saveSemester').addEventListener('click', function() {
+            const semesterName = document.getElementById('semesterName').value;
+            const semesterCredits = parseInt(document.getElementById('semesterCredits').value);
+            
+            if (!semesterName || isNaN(semesterCredits)) {
+                alert('Please fill in semester name and credits!');
+                return;
+            }
+            
+            const courseInputs = document.querySelectorAll('.course-input');
+            const courses = [];
+            
+            courseInputs.forEach(input => {
+                const name = input.querySelector('.course-name').value;
+                const credits = parseInt(input.querySelector('.course-credits').value);
+                
+                if (name && !isNaN(credits)) {
+                    courses.push({ name, credits });
+                }
+            });
+            
+            academicPlan[semesterName] = {
+                credits: semesterCredits,
+                courses: courses
+            };
+            
+            saveAcademicPlan();
+            loadAcademicPlan();
+            document.getElementById('semesterModal').classList.remove('active');
+        });
+
+        function editSemester(semesterName) {
+            const semester = academicPlan[semesterName];
+            
+            document.getElementById('semesterModalTitle').textContent = 'Edit Semester';
+            document.getElementById('semesterName').value = semesterName;
+            document.getElementById('semesterCredits').value = semester.credits;
+            
+            const coursesContainer = document.getElementById('coursesContainer');
+            coursesContainer.innerHTML = '<h3>Courses</h3>';
+            
+            semester.courses.forEach(course => {
+                const courseInput = document.createElement('div');
+                courseInput.className = 'course-input';
+                courseInput.innerHTML = `
+                    <input type="text" class="course-name" value="${course.name}" placeholder="Course Name">
+                    <input type="number" class="course-credits" value="${course.credits}" placeholder="Credits">
+                    <button class="remove-course"><i class="fas fa-trash"></i></button>
+                `;
+                coursesContainer.appendChild(courseInput);
+                
+                // Add event listener to remove button
+                courseInput.querySelector('.remove-course').addEventListener('click', function() {
+                    courseInput.remove();
+                });
+            });
+            
+            document.getElementById('semesterModal').classList.add('active');
+        }
+
+        function deleteSemester(semesterName) {
+            if (confirm(`Are you sure you want to delete ${semesterName}?`)) {
+                delete academicPlan[semesterName];
+                saveAcademicPlan();
+                loadAcademicPlan();
+            }
+        }
+
+        function saveAcademicPlan() {
+            userData.academicPlan = academicPlan;
+            saveUserData();
+        }
+
+        // Notes functionality
+        function loadNotes() {
+            const notesContainer = document.getElementById('notesContainer');
+            notesContainer.innerHTML = '';
+            
+            notes.forEach(note => {
+                const noteCard = document.createElement('div');
+                noteCard.className = 'note-card';
+                noteCard.innerHTML = `
+                    <div class="note-title">${note.title}</div>
+                    <div class="note-content">${note.content}</div>
+                    <div class="note-actions">
+                        <button class="delete-note" data-id="${note.id}"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                notesContainer.appendChild(noteCard);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-note').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    notes = notes.filter(note => note.id !== id);
+                    saveNotes();
+                    loadNotes();
+                });
+            });
+        }
+
+        document.getElementById('addNote').addEventListener('click', function() {
+            const title = document.getElementById('noteTitle').value;
+            const content = document.getElementById('noteContent').value;
+            
+            if (title && content) {
+                const note = {
+                    id: Date.now().toString(),
+                    title,
+                    content
+                };
+                notes.push(note);
+                saveNotes();
+                loadNotes();
+                
+                document.getElementById('noteTitle').value = '';
+                document.getElementById('noteContent').value = '';
+            }
+        });
+
+        function saveNotes() {
+            userData.notes = notes;
+            saveUserData();
+        }
+
+        // Syllabus functionality
+        function loadSyllabi() {
+            const syllabusList = document.getElementById('syllabusList');
+            syllabusList.innerHTML = '';
+            
+            syllabi.forEach(syllabus => {
+                const syllabusItem = document.createElement('div');
+                syllabusItem.className = 'syllabus-item';
+                syllabusItem.innerHTML = `
+                    <div class="syllabus-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div>${syllabus.course}</div>
+                    <button class="delete-syllabus" data-id="${syllabus.id}"><i class="fas fa-trash"></i></button>
+                `;
+                syllabusList.appendChild(syllabusItem);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-syllabus').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    syllabi = syllabi.filter(syllabus => syllabus.id !== id);
+                    saveSyllabi();
+                    loadSyllabi();
+                });
+            });
+        }
+
+        document.getElementById('uploadSyllabus').addEventListener('click', function() {
+            const course = document.getElementById('syllabusCourse').value;
+            const fileInput = document.getElementById('syllabusFile');
+            
+            if (course && fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const syllabus = {
+                        id: Date.now().toString(),
+                        course,
+                        filename: fileInput.files[0].name,
+                        data: e.target.result
+                    };
+                    syllabi.push(syllabus);
+                    saveSyllabi();
+                    loadSyllabi();
+                    
+                    document.getElementById('syllabusCourse').value = '';
+                    fileInput.value = '';
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        });
+
+        function saveSyllabi() {
+            userData.syllabi = syllabi;
+            saveUserData();
+        }
+
+        // Calendar functionality
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+
+        function updateCalendar() {
+            const calendar = document.querySelector('.calendar');
+            const monthYearElement = document.getElementById('calendarMonthYear');
+            
+            // Clear existing calendar days except header
+            const existingDays = document.querySelectorAll('.calendar-day');
+            existingDays.forEach(day => day.remove());
+            
+            // Update month/year display
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+            monthYearElement.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            
+            // Get first day of month and number of days
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = new Date();
+            
+            // Add empty days for first week
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('calendar-day', 'empty');
+                calendar.appendChild(emptyDay);
+            }
+            
+            // Add days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('calendar-day');
+                
+                // Check if this is today
+                if (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) {
+                    dayElement.classList.add('today');
+                }
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.classList.add('day-number');
+                dayNumber.textContent = day;
+                dayElement.appendChild(dayNumber);
+                
+                // Add events for this day
+                const dayEvents = events.filter(event => {
+                    const eventDate = new Date(event.date);
+                    return eventDate.getDate() === day && 
+                           eventDate.getMonth() === currentMonth && 
+                           eventDate.getFullYear() === currentYear;
+                });
+                
+                dayEvents.forEach(event => {
+                    const eventElement = document.createElement('div');
+                    eventElement.classList.add('calendar-event');
+                    eventElement.textContent = event.title;
+                    dayElement.appendChild(eventElement);
+                });
+                
+                // Add birthdays for this day
+                const dayBirthdays = birthdays.filter(birthday => {
+                    return birthday.day === day && birthday.month === currentMonth;
+                });
+                
+                dayBirthdays.forEach(birthday => {
+                    const birthdayElement = document.createElement('div');
+                    birthdayElement.classList.add('calendar-birthday');
+                    birthdayElement.textContent = `🎂 ${birthday.name}`;
+                    dayElement.appendChild(birthdayElement);
+                });
+                
+                // Add click event to open event modal
+                dayElement.addEventListener('click', function() {
+                    document.getElementById('eventModalTitle').textContent = `Add Event for ${monthNames[currentMonth]} ${day}, ${currentYear}`;
+                    document.getElementById('eventDate').value = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    document.getElementById('eventModal').classList.add('active');
+                });
+                
+                calendar.appendChild(dayElement);
+            }
+        }
+
+        function updateCalendarEventsTable() {
+            const calendarEvents = document.getElementById('calendarEvents');
+            calendarEvents.innerHTML = '';
+            
+            // Sort events by date
+            const sortedEvents = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            sortedEvents.forEach(event => {
+                const eventDate = new Date(event.date);
+                const dateString = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${dateString}</td>
+                    <td>${event.title}</td>
+                    <td>${event.category === 'academic' ? 'Academic' : 'Other'}</td>
+                    <td>
+                        <button class="edit-event" data-id="${event.id}"><i class="fas fa-edit"></i></button>
+                        <button class="delete-event" data-id="${event.id}"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                calendarEvents.appendChild(row);
+            });
+        }
+
+        document.getElementById('prevMonth').addEventListener('click', function() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            updateCalendar();
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', function() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            updateCalendar();
+        });
+
+        // Google Calendar Import
+        document.getElementById('importCalendar').addEventListener('click', function() {
+            const calendarUrl = document.getElementById('calendarUrl').value;
+            if (calendarUrl) {
+                // In a real implementation, this would parse the calendar data
+                // For now, we'll just add a sample event
+                const sampleEvent = {
+                    id: Date.now().toString(),
+                    title: "Imported Calendar Event",
+                    date: new Date().toISOString().split('T')[0],
+                    time: "12:00",
+                    description: "Imported from Google Calendar",
+                    category: "personal"
+                };
+                events.push(sampleEvent);
+                saveEvents();
+                loadEvents();
+                document.getElementById('calendarUrl').value = '';
+                alert('Calendar imported successfully!');
+            }
+        });
+
+        // Grad School functionality
+        function loadGradSchools() {
+            const gradSchoolsContainer = document.getElementById('gradSchoolsContainer');
+            gradSchoolsContainer.innerHTML = '';
+            
+            for (const schoolId in gradSchools) {
+                const school = gradSchools[schoolId];
+                const schoolElement = document.createElement('div');
+                schoolElement.className = 'card';
+                schoolElement.innerHTML = `
+                    <h3>${school.name} - ${school.location}</h3>
+                    <p><strong>Information:</strong> ${school.info}</p>
+                    <p><strong>Requirements:</strong> ${school.requirements}</p>
+                    <button class="delete-school" data-id="${schoolId}"><i class="fas fa-trash"></i> Delete</button>
+                `;
+                gradSchoolsContainer.appendChild(schoolElement);
+            }
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-school').forEach(button => {
+                button.addEventListener('click', function() {
+                    const schoolId = this.getAttribute('data-id');
+                    delete gradSchools[schoolId];
+                    saveGradSchools();
+                    loadGradSchools();
+                });
+            });
+        }
+
+        document.getElementById('addSchool').addEventListener('click', function() {
+            const name = document.getElementById('schoolName').value;
+            const location = document.getElementById('schoolLocation').value;
+            const info = document.getElementById('schoolInfo').value;
+            const requirements = document.getElementById('schoolRequirements').value;
+            
+            if (name && location) {
+                const schoolId = Date.now().toString();
+                gradSchools[schoolId] = {
+                    name,
+                    location,
+                    info,
+                    requirements
+                };
+                saveGradSchools();
+                loadGradSchools();
+                
+                document.getElementById('schoolName').value = '';
+                document.getElementById('schoolLocation').value = '';
+                document.getElementById('schoolInfo').value = '';
+                document.getElementById('schoolRequirements').value = '';
+            }
+        });
+
+        function saveGradSchools() {
+            userData.gradSchools = gradSchools;
+            saveUserData();
+        }
+
+        // Profile/Resume functionality
+        document.getElementById('uploadBtn').addEventListener('click', function() {
+            const fileInput = document.getElementById('uploadImage');
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profileImage').src = e.target.result;
+                    userData.profileImage = e.target.result;
+                    saveUserData();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        });
+
+        document.getElementById('updateResume').addEventListener('click', function() {
+            // Update resume preview
+            document.getElementById('previewName').textContent = 
+                document.getElementById('resumeName').value || 'Your Name';
+            document.getElementById('previewTitle').textContent = 
+                document.getElementById('resumeTitle').value || 'Professional Title';
+            
+            const email = document.getElementById('resumeEmail').value || 'email@example.com';
+            const phone = document.getElementById('resumePhone').value || '(123) 456-7890';
+            const location = document.getElementById('resumeLocation').value || 'City, State';
+            document.getElementById('previewContact').textContent = `${email} | ${phone} | ${location}`;
+            
+            document.getElementById('previewSummary').textContent = 
+                document.getElementById('resumeSummary').value || 'Your professional summary will appear here.';
+            document.getElementById('previewEducation').textContent = 
+                document.getElementById('resumeEducation').value || 'Your education details will appear here.';
+            document.getElementById('previewExperience').textContent = 
+                document.getElementById('resumeExperience').value || 'Your work experience will appear here.';
+            document.getElementById('previewSkills').textContent = 
+                document.getElementById('resumeSkills').value || 'Your skills will appear here.';
+            
+            // Save resume data
+            userData.resume = {
+                name: document.getElementById('resumeName').value,
+                title: document.getElementById('resumeTitle').value,
+                email: document.getElementById('resumeEmail').value,
+                phone: document.getElementById('resumePhone').value,
+                location: document.getElementById('resumeLocation').value,
+                summary: document.getElementById('resumeSummary').value,
+                education: document.getElementById('resumeEducation').value,
+                experience: document.getElementById('resumeExperience').value,
+                skills: document.getElementById('resumeSkills').value
+            };
+            saveUserData();
+            
+            alert('Resume updated successfully!');
+        });
+
+        document.getElementById('downloadResume').addEventListener('click', function() {
+            // Use html2canvas and jsPDF to generate PDF
+            const { jsPDF } = window.jspdf;
+            const resumeElement = document.getElementById('resumePreview');
+            
+            html2canvas(resumeElement).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210;
+                const pageHeight = 295;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                
+                let position = 0;
+                
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                pdf.save('resume.pdf');
+            });
+        });
+
+        // Age Calculator functionality
+        document.getElementById('calculateAge').addEventListener('click', function() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const birthYear = parseInt(document.getElementById('birthYear').value);
+            const currentYear = new Date().getFullYear();
+            
+            if (!firstName || !lastName || isNaN(birthYear)) {
+                alert('Please fill in all fields with valid data.');
+                return;
+            }
+            
+            const age = currentYear - birthYear;
+            const firstInitial = firstName.charAt(0);
+            
+            document.getElementById('ageResult').innerHTML = 
+                `<strong>${firstInitial}. ${lastName}</strong>, you're ${age} years old.`;
+        });
+
+        // Settings functionality
+        document.getElementById('saveSettings').addEventListener('click', function() {
+            const newDisplayName = document.getElementById('displayName').value;
+            
+            if (newDisplayName) {
+                document.getElementById('userDisplayName').textContent = newDisplayName;
+                document.getElementById('userWelcome').textContent = `Welcome, ${newDisplayName}`;
+                userData.displayName = newDisplayName;
+                saveUserData();
+                alert('Settings updated successfully!');
+            }
+        });
+
+        document.getElementById('applyAppearance').addEventListener('click', function() {
+            const fontFamily = document.getElementById('fontFamily').value;
+            const fontSize = document.getElementById('fontSize').value;
+            
+            document.documentElement.style.setProperty('--font-family', fontFamily);
+            document.documentElement.style.setProperty('--font-size', fontSize);
+            
+            userData.appearance = {
+                fontFamily,
+                fontSize
+            };
+            saveUserData();
+        });
+
+        // Custom background functionality
+        document.getElementById('setBackground').addEventListener('click', function() {
+            const fileInput = document.getElementById('customBackground');
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.body.style.backgroundImage = `url(${e.target.result})`;
+                    userData.background = e.target.result;
+                    saveUserData();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        });
+
+        document.getElementById('removeBackground').addEventListener('click', function() {
+            document.body.style.backgroundImage = 'none';
+            delete userData.background;
+            saveUserData();
+        });
+
+        // User Data Management
+        function saveUserData() {
+            localStorage.setItem('focusUserData', JSON.stringify(userData));
+        }
+
+        function loadUserData() {
+            // Load display name
+            if (userData.displayName) {
+                document.getElementById('userDisplayName').textContent = userData.displayName;
+                document.getElementById('userWelcome').textContent = `Welcome, ${userData.displayName}`;
+                document.getElementById('displayName').value = userData.displayName;
+            }
+            
+            // Load appearance settings
+            if (userData.appearance) {
+                document.getElementById('fontFamily').value = userData.appearance.fontFamily;
+                document.getElementById('fontSize').value = userData.appearance.fontSize;
+                document.documentElement.style.setProperty('--font-family', userData.appearance.fontFamily);
+                document.documentElement.style.setProperty('--font-size', userData.appearance.fontSize);
+            }
+            
+            // Load background
+            if (userData.background) {
+                document.body.style.backgroundImage = `url(${userData.background})`;
+            }
+            
+            // Load profile image
+            if (userData.profileImage) {
+                document.getElementById('profileImage').src = userData.profileImage;
+            }
+            
+            // Load resume data
+            if (userData.resume) {
+                document.getElementById('resumeName').value = userData.resume.name || '';
+                document.getElementById('resumeTitle').value = userData.resume.title || '';
+                document.getElementById('resumeEmail').value = userData.resume.email || '';
+                document.getElementById('resumePhone').value = userData.resume.phone || '';
+                document.getElementById('resumeLocation').value = userData.resume.location || '';
+                document.getElementById('resumeSummary').value = userData.resume.summary || '';
+                document.getElementById('resumeEducation').value = userData.resume.education || '';
+                document.getElementById('resumeExperience').value = userData.resume.experience || '';
+                document.getElementById('resumeSkills').value = userData.resume.skills || '';
+                
+                // Update preview
+                document.getElementById('updateResume').click();
+            }
+            
+            // Load academic plan
+            if (userData.academicPlan) {
+                academicPlan = userData.academicPlan;
+                loadAcademicPlan();
+            }
+            
+            // Load notes
+            if (userData.notes) {
+                notes = userData.notes;
+                loadNotes();
+            }
+            
+            // Load syllabi
+            if (userData.syllabi) {
+                syllabi = userData.syllabi;
+                loadSyllabi();
+            }
+            
+            // Load grad schools
+            if (userData.gradSchools) {
+                gradSchools = userData.gradSchools;
+                loadGradSchools();
+            }
+        }
+
+        // Theme Toggle
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+            userData.darkMode = document.body.classList.contains('dark-mode');
+            saveUserData();
+        });
+
+        // Modal close functionality
+        document.querySelectorAll('.close-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                document.getElementById('eventModal').classList.remove('active');
+                document.getElementById('semesterModal').classList.remove('active');
+            });
+        });
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentDateTime();
+            updateTimerDisplay();
+            loadEvents();
+            loadUserData();
+            
+            // Load dark mode if previously set
+            if (userData.darkMode) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeToggle').querySelector('i').classList.remove('fa-moon');
+                document.getElementById('themeToggle').querySelector('i').classList.add('fa-sun');
+            }
+            
+            // Update time every second
+            setInterval(updateCurrentDateTime, 1000);
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(event) {
+                const eventModal = document.getElementById('eventModal');
+                const semesterModal = document.getElementById('semesterModal');
+                
+                if (event.target === eventModal) {
+                    eventModal.classList.remove('active');
+                }
+                
+                if (event.target === semesterModal) {
+                    semesterModal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
